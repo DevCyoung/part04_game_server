@@ -1,49 +1,48 @@
 #include "pch.h"
-
-//C++11 부터 쓰레드생성이 표준으로 들어옴
-//앵간하면 모던한방법으로 구동
 #include <thread>
-//nc는아직도 윈도우즈
-//해외는 리눅스
 
-void HelloThread()
+//표준
+#include <atomic>
+//atomic atom(원자)
+//int sum = 0;
+atomic<int32> sum = 0;
+
+//DB
+//// Atolic
+// A라는 유저 인벤에서 집행검빼고
+// B라는 유저 인벤에서 집행검을추가
+////
+
+void Add()
 {
-	cout << "Hello Thread" << endl;
+	for (int32 i = 0; i < 1'000'000; ++i)
+	{
+		//++sum;
+		sum.fetch_add(1);
+	}
 }
 
-void HelloTrhead_2(int32 num)
+void Sub()
 {
-	cout << num << endl;
+	for (int32 i = 0; i < 1'000'000; ++i)
+	{
+		//--sum;
+		sum.fetch_add(-1);
+	}
 }
 
 int main()
 {	
-	vector<std::thread> v;
-	for (int32 i = 0; i < 10; ++i)
-	{
-		v.push_back(std::thread(HelloTrhead_2, i));
-	}
+	std::cout << sum++ << std::endl;
+	Add();
+	Sub();
+	cout << sum << endl;
 
-	for (int32 i = 0; i < 10; ++i)
-	{
-		if (v[i].joinable())
-		{
-			v[i].join();
-		}
-	}
+	std::thread t1(Add);
+	std::thread t2(Sub);
 
-	/** 
-	* output
-	01
-	3
-	5
-	7
-	9
-	2
-	6
+	t1.join();
+	t2.join();
 
-	4
-	8
-	**/
-	return 0;
+	cout << sum << endl;
 }
