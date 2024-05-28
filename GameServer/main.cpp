@@ -1,48 +1,66 @@
 #include "pch.h"
 #include <thread>
-
-//표준
 #include <atomic>
-//atomic atom(원자)
-//int sum = 0;
-atomic<int32> sum = 0;
 
-//DB
-//// Atolic
-// A라는 유저 인벤에서 집행검빼고
-// B라는 유저 인벤에서 집행검을추가
-////
+#include <mutex>
 
-void Add()
+vector<int32> v;
+
+// Mutual Exclusive 상호배타적
+mutex m;
+
+// RAII (Resource Acquisition is initialzation)
+template<typename T>
+class LockGuard
 {
-	for (int32 i = 0; i < 1'000'000; ++i)
+public:
+	LockGuard(T& m)
 	{
-		//++sum;
-		sum.fetch_add(1);
+		_mutex = &m;
+		_mutex->lock();
 	}
-}
 
-void Sub()
-{
-	for (int32 i = 0; i < 1'000'000; ++i)
+	~LockGuard()
 	{
-		//--sum;
-		sum.fetch_add(-1);
+		_mutex->unlock();
+	}
+
+private:
+	T* _mutex;
+
+};
+
+void Push()
+{
+	for (int32 i = 0; i < 10000; ++i)
+	{
+		//자물쇠잠그기
+		//LockGuard<std::mutex> lockGuard(m);
+		//std::lock_guard<std::mutex> lockGuard(m);
+		std::unique_lock<std::mutex> uniqueLock(m, std::defer_lock);
+		uniqueLock.lock();
+
+		//자물쇠 잠그기
+		//m.lock();		
+		//
+		//v.push_back(i);
+		//
+		////lock을풀고 나가야함
+		////언락안하면 데드락
+		//
+		////자물쇠 풀기
+		//m.unlock();
 	}
 }
 
 int main()
 {	
-	std::cout << sum++ << std::endl;
-	Add();
-	Sub();
-	cout << sum << endl;
-
-	std::thread t1(Add);
-	std::thread t2(Sub);
+	//Crash!
+	std::thread t1(Push);
+	std::thread t2(Push);
 
 	t1.join();
 	t2.join();
 
-	cout << sum << endl;
+	cout << v.size() << endl;
 }
