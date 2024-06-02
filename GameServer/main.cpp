@@ -7,7 +7,6 @@ volatile int32 sum = 0;
 mutex m;
 
 //int num = 100_000;
-
 class SpinLock
 {
 public:
@@ -17,28 +16,16 @@ public:
 		bool expected = false;
 		bool desired = true;
 
-		/*if (_locked == expected)
-		{
-			expected = _locked;
-			_locked = desired;
-			return true;
-		}
-		else
-		{
-			expected = _locked;
-			return false;
-		}*/
-
-
-
-		/*while (false == _locked.compare_exchange_strong(expected, desired))
-		{
-
-		}*/
-
 		while (false == _locked.compare_exchange_strong(expected, true))
-		{
+		{			
 			expected = false;
+
+
+			//C++11표준의 Sleep
+			//this_thread::sleep_for(std::chrono::milliseconds(100));
+			//this_thread::sleep_for(0ms);
+
+			this_thread::yield(); //== this_thread::sleep_for(0ms)//알아서 스케쥴링해라
 		}
 	}
 
@@ -48,12 +35,6 @@ public:
 	}
 
 private:
-	//c++ 에서의 volatile은 C# Java에서의 volatile와 다름
-	//컴파일러에게 최적화하지 말아달라고 하는것에 불과함
-	//volatile bool _locked = false;
-
-	//volatile을 포함하는 atomic
-	//원자적으로 동작함
 	atomic<bool> _locked = false;
 };
 
