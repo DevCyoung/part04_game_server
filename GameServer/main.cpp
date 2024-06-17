@@ -2,74 +2,66 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <Windows.h>
+#include <assert.h>
 
-volatile int32 sum = 0;
+//이벤트라는것의 응용
+
 mutex m;
+queue<int32> q;
+HANDLE handle;
 
-//int num = 100_000;
-class SpinLock
+void Producer()
 {
-public:
-	void lock()
+	while (true)
 	{
-		//CAS (Compare-And-Swap)
-		bool expected = false;
-		bool desired = true;
-
-		while (false == _locked.compare_exchange_strong(expected, true))
-		{			
-			expected = false;
+		{
+			unique_lock<mutex> lcok(m);
+			q.push(100);
+		}		
 
 
-			//C++11표준의 Sleep
-			//this_thread::sleep_for(std::chrono::milliseconds(100));
-			//this_thread::sleep_for(0ms);
+		::SetEvent(handle); //커널오브젝트를 시그널상태로 바꿔주세요
 
-			this_thread::yield(); //== this_thread::sleep_for(0ms)//알아서 스케쥴링해라
-		}
+		this_thread::sleep_for(1000000ms);
 	}
-
-	void unlock()
-	{
-		_locked.store(false);
-	}
-
-private:
-	atomic<bool> _locked = false;
-};
-
-SpinLock sp;
-
-void Add()
-{
-	for (int32 i = 0; i < 10'0000; ++i)
-	{
-		lock_guard<SpinLock> lock(sp);
-		sum++;
-	}		
 }
 
-void Sub()
+void Consumer()
 {
-	for (int32 i = 0; i < 10'0000; ++i)
+	while (true)
 	{
-		lock_guard<SpinLock> lock(sp);
-		sum--;
+		::WaitForSingleObject(handle, INFINITE); //커널오브젝트의 시그널상태를봄. 시그널상태면 넘어감 넌시그널이면 잠듬 Ready
+		//Auto-Reset을 켜놨으면 이스레드를 깨우면서 Non-Signal로 만든다.
+		//메뉴얼 설정을 TRUE로 해놨으면
+		//을 호출해서 ::ResetEvent(handle); 시그널을 꺼야한다.
+
+		unique_lock<mutex> lock(m);
+		if (q.empty() == false)
+		{
+			int32 data = q.front();
+			q.pop();
+			cout << data << endl;
+		}
 	}
 }
 
 int main()
 {
-	int32 a = 0;
-	a = 1;
-	a = 2;
-	a = 3;
-	a = 4;
+	//FALSE 여야 오토리셋이다
+	//FALSE 로둬서 시그널을끈다.
+	//커널에서 만들어주는 커널오브젝트
+	//Usage Count
+	//Singnal(파란불), Non-Signal(빨간불) (커널오브젝트가 가진 공통적인속성)	
+	handle =  ::CreateEvent(NULL/*보안속성*/, FALSE, FALSE, NULL);
 
-	thread t1(Add);
-	thread t2(Sub);
+
+	thread t1(Producer);
+	thread t2(Consumer);
 
 	t1.join();
 	t2.join();
-	cout << sum << endl;
+
+	assert(handle != 0);
+	::CloseHandle(handle);
 }
