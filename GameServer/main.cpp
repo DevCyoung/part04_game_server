@@ -6,58 +6,46 @@
 #include <assert.h>
 #include <future>
 
-//가시성 (코드재배치 컴파일러입장에서) 컴파일러가 하지않더라도 CPU가 뒤집일수도있다 (디스어셈블리가 그렇다하더라도 CPU가 멋대로 바꾼다)
-static int32 x = 0;
-static int32 y = 0;
-static int32 r1 = 0;
-static int32 r2 = 0;
-
-static volatile bool flag = false;
-
-void Thread_1()
-{
-	while (!flag)
-	{
-	}
-	y = 1; // Store y 여기서  y = 1을 대입한 명령어가 있다고해서 곧이 곧대로 처박는게아님 (캐시에 넣을수도있음) 이를 가시성 이라고한다.
-	r1 = x; // Load x
-}
-
-void Thread_2()
-{
-	while (!flag)
-	{
-	}
-
-	x = 1; // Store x
-	r2 = y; // Load y 여기서 로드하는게 진짜 메모리에서 로드하는게 아닐수도있음 (캐시에서로드함)
-}
+atomic<bool> flag;
 
 int main()
 {
-	int32 count = 0;
+	flag = false;
+	//flag.is_lock_free(); // ~이없다 락이없다~ 락이왜없서? bool 자체가 CPU에 의해서 원자적으로 처리할수 있기때문!
+	//물론 락이필요한 데이터면 아토믹이 알아서 락걸어줌
+	//flag = true;
 
-	while (true)
+	//flag = true stor와 같은말
+	flag.store(true, memory_order_seq_cst);
+
+	bool val = flag.load(memory_order_seq_cst);
+
+	// 이전 flag 값을 prev에 넣고, flag 값을 수정
 	{
-		flag = false;
+		//이것또한 읽고 쓰기를 동시에해야함 exchagne()
+		bool prev = flag.exchange(true); // 값을넣고 이전의값을 받아옴 반드시 exchange로 해야함
 
-		++count;
+		//bool prev = flag;
+		//flag = true;
+	}
+	
+	// CAS (Compare-And-Swap) 조건부 수정
+	{
+		bool expected = false;
+		bool desired = true;
+		flag.compare_exchange_strong(expected, desired);
 
-		x = y = r1 = r2 = 0;
-
-		thread t1(Thread_1);
-		thread t2(Thread_2);
-
-		flag = true;
-
-		t1.join();
-		t2.join();
-
-		if (r1 == 0 && r2 == 0)
+		if (flag == expected)
 		{
-			break;
+			expected = flag;
+			flag = desired;
+			return true;
+		}
+		else
+		{
+			expected = flag;
+			return false;
 		}
 	}
 
-	cout << count << endl;
 }
