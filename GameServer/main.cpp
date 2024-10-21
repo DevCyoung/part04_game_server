@@ -9,14 +9,14 @@
 #include "ConcurrentStack.h"
 #include "ConcurrentQueue.h"
 
-LockStack<int32> lockStack;
+LockFreeStack<int32> lockStack;
 LockQueue<int32> lockQueue;
 
 void Push()
 {
 	while (1)
 	{
-		lockQueue.Push(rand() % 1000);
+		lockStack.Push(rand() % 1000);
 	}
 }
 
@@ -25,7 +25,7 @@ void Pop()
 	while (1)
 	{
 		int32 value;
-		lockQueue.TryPop(value);
+		lockStack.TryPop(value);
 	}
 }
 

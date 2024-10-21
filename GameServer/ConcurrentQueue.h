@@ -51,3 +51,4 @@ private:
 	std::mutex _mutex;
 	condition_variable _condVar;
 };
+
