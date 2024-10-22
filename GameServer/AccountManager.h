@@ -17,7 +17,7 @@ public:
 
 	Account* GetAccount(int32 id)
 	{
-		lock_guard<mutex> guard(_mutex);
+		std::lock_guard<std::mutex> guard(_mutex);
 		//¹º°¡¸¦ °®°í¿È
 		return nullptr;
 	}
@@ -25,7 +25,7 @@ public:
 	void ProcessLogin();
 
 private:
-	mutex _mutex;
+	std::mutex _mutex;
 
 };
 

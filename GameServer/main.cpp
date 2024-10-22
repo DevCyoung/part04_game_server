@@ -25,12 +25,14 @@ void Pop()
 	while (1)
 	{
 		int32 value;
-		lockStack.TryPop(value);
+		lockStack.TryPop();
 	}
 }
 
+std::atomic<int32> count;
+
 int main()
-{
+{	
 	std::thread t1(Push);
 	std::thread t2(Push);
 	std::thread t3(Push);
