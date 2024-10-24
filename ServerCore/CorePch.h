@@ -23,3 +23,6 @@ class CorePch
 
 void HelloGameServer();
 void HelloDummyClient();
+
+
+#include <Windows.h>
