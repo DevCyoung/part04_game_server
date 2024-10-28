@@ -1,9 +1,14 @@
 #include "pch.h"
 #include "Lock.h"
 #include "CoreTLS.h"
+#include "DeadLockProfiler.h"
 
-void Lock::WriteLock()
+void Lock::WriteLock(const char* name)
 {
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
+
 	// 동일한 쓰레드가 소유하고 있다면 주고선 성공
 	const uint32 lockThreadId = (_lockFag.load() & WRITE_THREAD_MASK) >> 16;
 	if (LThreadId == lockThreadId)
@@ -37,8 +42,13 @@ void Lock::WriteLock()
 	}
 }
 
-void Lock::WriteUnlock()
+void Lock::WriteUnlock(const char* name)
 {
+
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
+
 	//버그를 잡기위한용도 ReadLock을 다풀기전에는 WriteUnLock 불가능
 	if ((_lockFag.load() & READ_COUNT_MASK) != 0)
 	{
@@ -52,8 +62,13 @@ void Lock::WriteUnlock()
 	}
 }
 
-void Lock::RaedLock()
+void Lock::RaedLock(const char* name)
 {
+
+#if _DEBUG
+	GDeadLockProfiler->PushLock(name);
+#endif
+
 	// 동일한 쓰레드가 소유하고 있다면 무조건 성공, WriteLock -> ReadLock 허용
 	const uint32 lockThreadId = (_lockFag.load() & WRITE_THREAD_MASK) >> 16;
 	if (LThreadId == lockThreadId)
@@ -88,8 +103,12 @@ void Lock::RaedLock()
 	}
 }
 
-void Lock::ReadUnlock()
+void Lock::ReadUnlock(const char* name)
 {
+#if _DEBUG
+	GDeadLockProfiler->PopLock(name);
+#endif
+
 	// 이전값
 	if ((_lockFag.fetch_sub(1) & READ_COUNT_MASK) == 0)
 	{

@@ -12,79 +12,27 @@
 
 CoreGlobal GCore;
 
-class TestLock
-{
-	USE_LOCK;
+#include "PlayerManager.h"
+#include "AccountManager.h"
 
-public:
-	int32 TestRead()
-	{
-		READ_LOCK;
-		
-		if (_queue.empty()) 
-		{
-			return -1;
-		}
-
-		return _queue.front();
-	}
-
-	void TestPush()
-	{
-		WRITE_LOCK;
-
-		_queue.push(rand() % 1000);
-	}
-
-	void TestPop()
-	{
-		WRITE_LOCK;
-
-		if (false == _queue.empty())
-		{
-			_queue.pop();
-		}
-	}
-
-private:
-	queue<int32> _queue;
-
-};
-
-TestLock testLock;
-
-
-void ThreadWrite()
-{
-	while (true)
-	{
-		testLock.TestPush();
-		this_thread::sleep_for(1ms);
-		testLock.TestPop();
-	}
-}
-
-void ThreadRead()
-{
-	while (true)
-	{
-		int32 value = testLock.TestRead();
-		std::cout << value << std::endl;
-		std::this_thread::sleep_for(1ms);
-	}
-}
 
 int main()
 {
-	for (int32 i = 0; i < 2; ++i)
-	{
-		GThreadManager->Launch(ThreadWrite);
-	}
+	GThreadManager->Launch([=] {
+		while (true)
+		{
+			std::cout << "PlayerThenAccount" << std::endl;
+			GPlayerManager.PlayerThenAccount();
+			//this_thread::sleep_for(100ms);
+		}
+		});
 
-	for (int32 i = 0; i < 10; ++i)
-	{
-		GThreadManager->Launch(ThreadRead);
-	}
-
-	GThreadManager->Join();
+	GThreadManager->Launch([=] {
+		while (true)
+		{
+			std::cout << "AccountThenPlayer" << std::endl;
+			GAccountManager.AccountThenPlayer();
+			//this_thread::sleep_for(100ms);
+		}
+		});
 }
