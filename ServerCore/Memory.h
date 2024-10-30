@@ -5,7 +5,7 @@
 template<typename Type, typename... Args>
 Type* xnew(Args&&... args)
 {
-	Type* memory = static_cast<Type*>(xalloc(sizeof(Type)));
+	Type* memory = static_cast<Type*>(_xalloc(sizeof(Type)));
 
 	//placement new
 	new(memory)Type(std::forward<Args>(args)...);
@@ -17,5 +17,5 @@ template<typename Type>
 void xdelete(Type* obj)
 {
 	obj->~Type();
-	xrelease(obj);
+	_xrelease(obj);
 }

@@ -18,11 +18,11 @@
 ---------------------*/
 
 #ifdef _DEBUG
-#define xalloc(size)	BaseAllocator::Alloc(size)
-#define xrelease(ptr)	BaseAllocator::Release(ptr)
+#define _xalloc(size)	StompAllocator::Alloc(size)
+#define _xrelease(ptr)	StompAllocator::Release(ptr)
 #else
-#define xalloc(size)	BaseAllocator::Alloc(size)
-#define xrelease(ptr)	BaseAllocator::Release(ptr)
+#define _xalloc(size)	BaseAllocator::Alloc(size)
+#define _xrelease(ptr)	BaseAllocator::Release(ptr)
 #endif
 
 
