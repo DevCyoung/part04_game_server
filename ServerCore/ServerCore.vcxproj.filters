@@ -4,9 +4,6 @@
     <Filter Include="Network">
       <UniqueIdentifier>{556326b5-970c-4cf6-84aa-39065d442748}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Utils">
-      <UniqueIdentifier>{1599d855-940e-4d05-86b7-1b0cc4328b17}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Main">
       <UniqueIdentifier>{83f8c7c4-febd-4aca-9eac-bac23f0b45db}</UniqueIdentifier>
     </Filter>
@@ -15,6 +12,9 @@
     </Filter>
     <Filter Include="Memory">
       <UniqueIdentifier>{14abec34-b587-4f2d-9cf1-be52f27a4286}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\Utils">
+      <UniqueIdentifier>{1599d855-940e-4d05-86b7-1b0cc4328b17}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -54,6 +54,12 @@
     <ClInclude Include="Memory.h">
       <Filter>Memory</Filter>
     </ClInclude>
+    <ClInclude Include="Container.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePch.cpp">
@@ -84,6 +90,12 @@
       <Filter>Memory</Filter>
     </ClCompile>
     <ClCompile Include="Memory.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Container.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryPool.cpp">
       <Filter>Memory</Filter>
     </ClCompile>
   </ItemGroup>

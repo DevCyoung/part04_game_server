@@ -15,7 +15,7 @@ void ThreadManager::Launch(function<void(void)> callback)
 {
 	LockGuard guard(_lock);
 
-	_threads.push_back(thread([=]() {
+	_threads.push_back(std::thread([=]() {
 		InitTLS();
 		callback();
 		DestroyTLS();

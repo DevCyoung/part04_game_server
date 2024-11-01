@@ -13,7 +13,11 @@
 
 class Charactor
 {
-
+public:
+	Charactor()
+	{
+		std::cout << "Charactor" << std::endl;
+	}
 };
 
 class Player : public Charactor
@@ -22,11 +26,32 @@ public:
 	int hp;
 };
 
+std::vector<Charactor> getCharactors()
+{
+	std::vector<Charactor> ch;
+
+	ch = std::vector<Charactor>(10);
+
+	return ch;
+}
+
 int main()
 {
-	Player* player = xnew<Player>();
-	player->hp = 100;
+	for (int32 i = 0; i < 5; i++)
+	{
+		GThreadManager->Launch([]()
+			{
+				while (true)
+				{
+					Vector<Charactor> v(10);
 
-	xdelete(player);
-	player->hp = 100;
+					Map<int32, Charactor> m;
+					m[100] = Charactor();
+
+					this_thread::sleep_for(10ms);
+				}
+			});
+	}
+
+	GThreadManager->Join();
 }
