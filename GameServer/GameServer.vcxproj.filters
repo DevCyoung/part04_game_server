@@ -27,6 +27,7 @@
     <ClCompile Include="PlayerManager.cpp">
       <Filter>Main</Filter>
     </ClCompile>
+    <ClCompile Include="TestLockFree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
@@ -44,5 +45,6 @@
     <ClInclude Include="AccountManager.h">
       <Filter>Main</Filter>
     </ClInclude>
+    <ClInclude Include="TestLockFree.h" />
   </ItemGroup>
 </Project>

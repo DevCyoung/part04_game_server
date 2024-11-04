@@ -53,5 +53,8 @@ int main()
 			});
 	}
 
+	//__int64 a;
+
+
 	GThreadManager->Join();
 }
