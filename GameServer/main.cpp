@@ -10,51 +10,60 @@
 #include "ThreadManager.h"
 #include "Lock.h"
 #include "Memory.h"
+#include "TypeCast.h"
 
-class Charactor
+using TL = TypeList<class Player, class Charactor, class Knight, class  QD>;
+
+class Player
 {
 public:
-	Charactor()
+	Player()
 	{
-		std::cout << "Charactor" << std::endl;
+		INIT_TL(Player);
 	}
+
+	DECLARE_TL;
 };
 
-class Player : public Charactor
+class Charactor : public Player
 {
 public:
-	int hp;
+	Charactor() { INIT_TL(Charactor); };
 };
 
-std::vector<Charactor> getCharactors()
+class Knight : public Player
 {
-	std::vector<Charactor> ch;
+public:
+	Knight() { INIT_TL(Knight); }
+};
 
-	ch = std::vector<Charactor>(10);
+class QD
+{
 
-	return ch;
-}
+};
 
 int main()
 {
-	for (int32 i = 0; i < 5; i++)
+	Player* player = new Player();
+
+	Knight* knight = TypeCast<Knight*>(player);
+
+	if (knight)
 	{
-		GThreadManager->Launch([]()
-			{
-				while (true)
-				{
-					Vector<Charactor> v(10);
 
-					Map<int32, Charactor> m;
-					m[100] = Charactor();
-
-					this_thread::sleep_for(10ms);
-				}
-			});
 	}
 
-	//__int64 a;
+	Player* p = TypeCast<Player*>(knight);
 
 
-	GThreadManager->Join();
+	Player* knight2 = new Knight();
+
+
+	bool can = CanCast<Knight*>(knight2);
+
+
+	if (knight)
+	{
+
+	}
 }
