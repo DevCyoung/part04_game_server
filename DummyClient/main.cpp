@@ -65,8 +65,36 @@ int main()
 
 		//Todo
 
+		while (true)
+		{
+			//std::this_thread::sleep_for(std::chrono::seconds(10));
 
-		std::this_thread::sleep_for(std::chrono::seconds(1));
+			char recvBuffer[256];
+
+			int recvlen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+
+			if (recvlen == SOCKET_ERROR)
+			{
+				std::cout << "Send Fail" << std::endl;
+			}
+
+			std::cout << "Recv Data! Len = " << recvlen << std::endl;
+			std::cout << "Recv Data! = " << recvBuffer << std::endl;
+
+			strcat_s(recvBuffer, "[Re: Server]");
+
+			int sendlen = ::send(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+
+			if (sendlen == SOCKET_ERROR)
+			{
+				std::cout << "Send Fail" << std::endl;
+			}
+
+			std::cout << "Send Data! Len = " << sendlen << std::endl;
+			std::cout << "Send Data = " << recvBuffer << std::endl;
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		}		
 	}
 
 	::WSACleanup();

@@ -55,7 +55,36 @@ int main()
 
 	while (true)
 	{
-		//std::this_thread::sleep_for(1ms);
+		//std::this_thread::sleep_for(std::chrono::seconds(10));
+
+		char recvBuffer[256] = "Hello World!";				
+		
+		
+
+		int sendlen = ::send(socket, recvBuffer, sizeof(recvBuffer), 0);
+
+		if (sendlen == SOCKET_ERROR)
+		{
+			std::cout << "Send Fail" << std::endl;
+		}
+
+		std::cout << "Send Data! Len = " << sendlen << std::endl;
+		std::cout << "Send Data = " << recvBuffer << std::endl;
+
+		shutdown(socket, SD_RECEIVE);
+
+		int recvlen = ::recv(socket, recvBuffer, sizeof(recvBuffer), 0);
+
+		if (recvlen == SOCKET_ERROR)
+		{
+			std::cout << "Send Fail" << std::endl;
+		}
+
+		std::cout << "Recv Data! Len = " << recvlen << std::endl;
+		std::cout << "Recv Data! = " << recvBuffer << std::endl;
+
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
 
 
