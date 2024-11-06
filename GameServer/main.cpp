@@ -30,7 +30,7 @@ int main()
 	service.sin_family = AF_INET;	
 	::inet_pton(AF_INET, "127.0.0.1", &service.sin_addr);
 	service.sin_port = htons(7878); //host to network short ¿£µð¾È ÀÌ½´
-
+	
 	if (SOCKET_ERROR == ::bind(socket, (const sockaddr*)&service, sizeof(service)))
 	{
 		int errCode = ::WSAGetLastError();
@@ -38,26 +38,39 @@ int main()
 		return 0;
 	}
 
-
 	//other
 	SOCKADDR_IN other;
 	::memset(&other, 0, sizeof(SOCKADDR_IN));
 	other.sin_family = AF_INET;
 	::inet_pton(AF_INET, "127.0.0.1", &other.sin_addr);
 	other.sin_port = htons(7899); //host to network short ¿£µð¾È ÀÌ½´
-	int pa[10000];
+
+	int pa[1000];
 
 	int& a = pa[0];
 	a = 0;
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+	//ConnectedUDP
+	::connect(socket, (sockaddr*)&other, sizeof(other));
 
 	while (1)
 	{
-		int sendlen = ::sendto(socket, (const char*)pa, sizeof(pa), 0, (sockaddr*)&other, sizeof(other));
+		//ConnectedUDP
+		int sendlen = ::send(socket, (const char*)pa, sizeof(pa), 0);
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//std::cout << sendlen << " s " << a  <<std::endl;
 		
-		if (a >= 10000)
+		if (sendlen == -1)
 		{
-			::sendto(socket, (const char*)&pa, 0, 0, (sockaddr*)&other, sizeof(other));
+			std::cout << "Error" << std::endl;
+			break;
+		}
+
+		if (a >= 1000000)
+		{
+			int s = ::sendto(socket, (const char*)&pa, 0, 0, (sockaddr*)&other, sizeof(other));
+				
 			//std::cout << "sendto0" << std::endl;
 			break;
 		}
