@@ -16,74 +16,71 @@ int main()
 	WORD wVersionRequested = MAKEWORD(2, 2);
 	WSADATA wsaData;
 	int err = ::WSAStartup(wVersionRequested, &wsaData);
-	
-	SOCKET socket = ::socket(AF_INET, SOCK_DGRAM, NULL);
-	if (socket == INVALID_SOCKET)
+
+	SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, NULL);
+	if (clientSocket == INVALID_SOCKET)
 	{
 		int errCode = ::WSAGetLastError();
 		std::cout << errCode << " : INVALID_SOCKET" << std::endl;
 		return 0;
 	}
 
-	SOCKADDR_IN service;
-	::memset(&service, 0, sizeof(SOCKADDR_IN));
-	service.sin_family = AF_INET;	
-	::inet_pton(AF_INET, "127.0.0.1", &service.sin_addr);
-	service.sin_port = htons(7878); //host to network short 엔디안 이슈
-	
-	if (SOCKET_ERROR == ::bind(socket, (const sockaddr*)&service, sizeof(service)))
+	u_long on = 1;
+	if (SOCKET_ERROR == ::ioctlsocket(clientSocket, FIONBIO, &on))
 	{
-		int errCode = ::WSAGetLastError();
-		std::cout << errCode << " : Connect Fail" << std::endl;
+		std::cout << "ioctlsocket error" << std::endl;
 		return 0;
 	}
 
-	//other
-	SOCKADDR_IN other;
-	::memset(&other, 0, sizeof(SOCKADDR_IN));
-	other.sin_family = AF_INET;
-	::inet_pton(AF_INET, "127.0.0.1", &other.sin_addr);
-	other.sin_port = htons(7899); //host to network short 엔디안 이슈
+	SOCKADDR_IN serverAddr;
+	memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(7878);
+	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 
-	int pa[1000];
-
-	int& a = pa[0];
-	a = 0;
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-	//ConnectedUDP
-	::connect(socket, (sockaddr*)&other, sizeof(other));
-
-	while (1)
+	while (true)
 	{
-		//ConnectedUDP
-		int sendlen = ::send(socket, (const char*)pa, sizeof(pa), 0);
-		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		//std::cout << sendlen << " s " << a  <<std::endl;
-		
-		if (sendlen == -1)
+		if (SOCKET_ERROR == ::connect(clientSocket, (const sockaddr*)&serverAddr, sizeof(serverAddr)))
 		{
-			std::cout << "Error" << std::endl;
+			// 원래 블록 했어야 했는데 너가 논블로킹으로 하라며
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+			{
+				continue;
+			}
+
+			// 이미 연결된 상태라면 beak	
+			if (::WSAGetLastError() == WSAEISCONN)
+			{
+				break;
+			}
+
 			break;
 		}
+	}
+	
+	std::cout << "Connected to Server! " << std::endl;
 
-		if (a >= 1000000)
+	
+	char sendBuffer[100] = "Hello World!";
+	// Send
+	while (true)
+	{
+		if (::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0) == SOCKET_ERROR)
 		{
-			int s = ::sendto(socket, (const char*)&pa, 0, 0, (sockaddr*)&other, sizeof(other));
-				
-			//std::cout << "sendto0" << std::endl;
-			break;
-		}
+			//문제가 있을수도 없을수도있음 뒤끝작렬 너가 넌 블러킹으로 하라며!
+			//아직 완료가 되지않았다던가...
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+			{
+				continue;
+			}
 
-		++a;
+
+			//error
+			break;	
+		}
 	}
 
 
-	::sendto(socket, (const char*)&pa, 0, 0, (sockaddr*)&other, sizeof(other));
-
-	std::cout << a << std::endl;
-
-	
 
 	while (true);
 
