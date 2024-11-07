@@ -164,6 +164,7 @@
     <ClInclude Include="ObjectPool.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RefCounting.h" />
+    <ClInclude Include="ServerHelper.h" />
     <ClInclude Include="ThreadManager.h" />
     <ClInclude Include="TypeCast.h" />
     <ClInclude Include="Types.h" />
@@ -186,6 +187,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="RefCounting.cpp" />
+    <ClCompile Include="ServerHelper.cpp" />
     <ClCompile Include="ThreadManager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
