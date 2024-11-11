@@ -13,52 +13,81 @@
 #include <thread>
 #include <chrono>
 
+using namespace std;
 
 int main()
 {
-	//Winsock lib 초기화
-	WORD wVersionRequested = MAKEWORD(2, 2);
-	WSADATA wsaData;
-	int err = ::WSAStartup(wVersionRequested, &wsaData);
+	//std::this_thread::sleep_for(1s);
 
-	SOCKET socket = ::socket(AF_INET, SOCK_STREAM, NULL);
+	WSAData wsaData;
+	if (::WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+		return 0;
+
+	SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (clientSocket == INVALID_SOCKET)
+		return 0;
 
 	u_long on = 1;
-	if (::ioctlsocket(socket, FIONBIO, &on))
-	{
-		std::cout << "error" << std::endl;
-	}
-	//::connect(socket, (sockaddr*) & sockAddr, sizeof(sockAddr));
+	if (::ioctlsocket(clientSocket, FIONBIO, &on) == INVALID_SOCKET)
+		return 0;
 
-	ServerHelper helper;
+	SOCKADDR_IN serverAddr;
+	::memset(&serverAddr, 0, sizeof(serverAddr));
+	serverAddr.sin_family = AF_INET;
+	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+	serverAddr.sin_port = ::htons(7777);
 
-
-	YSession session;
-
-	session.bConnect = false;
-	session.Socket = socket;
-	session.OtherPort = 7878;
-	session.OtherIP = "127.0.0.1";
-	session.Symbol = "Lidar";
-	session.IOType = eYSIO::RECV;
-
-	helper.AddClient(session);
-	helper.StartThread();
-
-
+	// Connect
 	while (true)
 	{
-		char buffer[256];
-		int ret = helper.Read("Lidar", buffer, sizeof(buffer));
-
-		if (ret > 0)
+		if (::connect(clientSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
 		{
-			std::cout << buffer << std::endl;
+			// 원래 블록했어야 했는데... 너가 논블로킹으로 하라며?
+			if (::WSAGetLastError() == WSAEWOULDBLOCK)
+				continue;
+			// 이미 연결된 상태라면 break
+			if (::WSAGetLastError() == WSAEISCONN)
+				break;
+			// Error
+			break;
 		}
-
-		helper.Update();
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	}
+
+	std::cout << "Connected to Server!" << std::endl;
+
+	char sendBuffer[100] = "Hello World";
+	WSAEVENT wsaEvent = ::WSACreateEvent();
+	WSAOVERLAPPED overlapped = {};
+	overlapped.hEvent = wsaEvent;
+
+	// Send
+	while (true)
+	{
+		WSABUF wsaBuf;
+		wsaBuf.buf = sendBuffer;
+		wsaBuf.len = 100;
+
+		DWORD sendLen = 0;
+		DWORD flags = 0;
+
+		if (SOCKET_ERROR == ::WSASend(clientSocket, &wsaBuf, 1, &sendLen, flags, &overlapped, nullptr))
+		{
+			if (WSA_IO_PENDING == ::WSAGetLastError())
+			{
+				// pending
+				::WSAWaitForMultipleEvents(1, &wsaEvent, TRUE, WSA_INFINITE, FALSE);
+				::WSAGetOverlappedResult(clientSocket, &overlapped, &sendLen, FALSE, &flags);
+			}
+		}
+		
+		std::cout << "Send Data ! Len = " << sizeof(sendBuffer) << std::endl;
+
+		this_thread::sleep_for(1s);
+	}
+
+	// 소켓 리소스 반환
+	::closesocket(clientSocket);
+
+	// 윈속 종료
 	::WSACleanup();
 }
