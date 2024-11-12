@@ -12,23 +12,31 @@ const int BUFSIZE = 1000;
 #include <chrono>
 #include <queue>
 #include "SocketUtils.h"
+#include "Listener.h"
+#include "ThreadManager.h"
+#include "SocketUtils.h"
+
+ThreadManager tm;
+
 
 int main()
 {
 	SocketUTils::Init();
 
-	SOCKET socket = SocketUTils::CreateSocket();
+	Listener listener;
+	listener.StartAccept(NetAddress(L"127.0.0.1", 7777));
 
-	SocketUTils::BindAnyAddress(socket, 7777);
+	for (int32 i = 0; i < 5; ++i)
+	{
+		tm.Launch([=]() {
+			while (true)
+			{
+				GIocpCore.Dispatch();
+			}
+			});
+	}
 
-	SocketUTils::Listen(socket);
-
-	::accept(socket, nullptr, nullptr);
-
-	std::cout << "Client Connected" << std::endl;
-
-
-	while (1);
+	tm.Join();
 
 	SocketUTils::Clear();
 }

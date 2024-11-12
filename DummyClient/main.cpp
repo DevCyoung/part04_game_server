@@ -37,6 +37,8 @@ int main()
 	::inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
 	serverAddr.sin_port = ::htons(7777);
 
+	std::this_thread::sleep_for(2000ms);
+
 	// Connect
 	while (true)
 	{
