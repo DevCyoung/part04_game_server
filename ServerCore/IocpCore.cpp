@@ -17,21 +17,23 @@ IocpCore::~IocpCore()
 
 bool IocpCore::Register(IocpObject* iocpObject)
 {
-	return ::CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandle, reinterpret_cast<ULONG_PTR>(iocpObject)/*key*/, 0);
+	return ::CreateIoCompletionPort(iocpObject->GetHandle(), _iocpHandle, 0/*key*/, 0);
 }
 
 bool IocpCore::Dispatch(uint32 timeoutMS)
 {
 	DWORD numOfBytes = 0;
-	IocpObject* iocpObject = nullptr;
+	ULONG_PTR key = 0;
+	//IocpObject* iocpObject = nullptr;
 	IocpEvent* iocpEvent = nullptr;
 
 	if (::GetQueuedCompletionStatus(_iocpHandle,
 		OUT & numOfBytes,
-		OUT reinterpret_cast<PULONG_PTR>(&iocpObject),
+		OUT & key,
 		OUT reinterpret_cast<LPOVERLAPPED*>(&iocpEvent),
 		timeoutMS))
 	{
+		IocpObjectRef iocpObject = iocpEvent->owner;		
 		iocpObject->Dispatch(iocpEvent, numOfBytes);
 	}
 	else
